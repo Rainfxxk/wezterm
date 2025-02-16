@@ -8,6 +8,8 @@ local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
 
 local act = wezterm.action
 
+local launch_menu = {}
+
 local config = {
 	font = wezterm.font("Hack Nerd Font Mono", { weight = "Regular" }),
 	font_size = 11,
@@ -171,6 +173,11 @@ local config = {
 			action = act.CloseCurrentPane({ confirm = false }),
 		},
 		{
+			key = "m",
+			mods = "LEADER",
+			action = act.ShowLauncher,
+		},
+		{
 			key = "N",
 			mods = "LEADER | SHIFT",
 			action = act.SpawnTab("CurrentPaneDomain"),
@@ -231,15 +238,27 @@ local config = {
 			action = act.ActivateTab(8),
 		},
 	},
+
+	launch_menu = launch_menu,
 }
 
 if wezterm.target_triple == "x86_64-pc-windows-msvc" then
 	config.default_prog = { "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" }
 	--color, metadata = wezterm.color.load_scheme(".\\colors\\'Github Dark Dimmed.toml'")
 	--config.color_scheme = color
-	config.window_background_opacity = 0.6
-	config.text_background_opacity = 0.6
+	config.window_background_opacity = 0.8
+	config.text_background_opacity = 0.8
 	config.color_scheme_dirs = { "C:\\Users\\Rain\\.config\\wezterm\\color" }
+
+	table.insert(launch_menu, {
+		label = "Powershell",
+		args = { "powershell.exe" },
+	})
+
+	table.insert(launch_menu, {
+		label = "WSL",
+		args = { "ubuntu2404.exe" },
+	})
 elseif wezterm.target_triple == "x86_64-unknown-linux-gnu" then
 	config.color_scheme_dirs = { "/home/rain/.config/wezterm/color" }
 	config.window_background_opacity = 1
