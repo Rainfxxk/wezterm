@@ -1,10 +1,79 @@
 local wezterm = require("wezterm")
 
 -- The filled in variant of the < symbol
-local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
+local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
 
 -- The filled in variant of the > symbol
-local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
+local SOLID_RIGHT_ARROW = wezterm.nerdfonts.ple_right_half_circle_thick
+
+-- This function returns the suggested title for a tab.
+-- It prefers the title that was set via `tab:set_title()`
+-- or `wezterm cli set-tab-title`, but falls back to the
+-- title of the active pane in that tab.
+function tab_title(tab_info)
+    local title = tab_info.tab_title
+    -- if the tab title is explicitly set, take that
+    if title and #title > 0 then
+        return title
+    end
+    -- Otherwise, use the title from the active pane
+    -- in that tab
+    return tab_info.active_pane.title
+end
+
+local wezterm = require 'wezterm'
+
+wezterm.on('update-right-status', function(window, pane)
+    -- "Wed Mar 3 08:14"
+    local date = wezterm.strftime '%a %b %-d %H:%M '
+
+    window:set_right_status(wezterm.format {
+        { Text = wezterm.nerdfonts.fa_clock_o .. ' ' .. date },
+    })
+end)
+
+wezterm.on(
+    'format-tab-title',
+    function(tab, tabs, panes, config, hover, max_width)
+        local edge_background = '#22272e'
+        local background = '#22272e'
+        local foreground = '#adbac7'
+
+        if tab.is_active then
+            background = '#363d48'
+            foreground = '#adbac7'
+        elseif hover then
+            background = '#22272e'
+            foreground = '#adbac7'
+        end
+
+        local edge_foreground = background
+
+        local title = tab_title(tab)
+
+        -- ensure that the titles fit in the available space,
+        -- and that we have room for the edges.
+        title = wezterm.truncate_right(title, max_width - 4)
+
+        return {
+            { Background = { Color = edge_background } },
+            { Foreground = { Color = edge_foreground } },
+            { Text = ' ' },
+            { Background = { Color = edge_background } },
+            { Foreground = { Color = edge_foreground } },
+            { Text = SOLID_LEFT_ARROW },
+            { Background = { Color = background } },
+            { Foreground = { Color = foreground } },
+            { Text = title },
+            { Background = { Color = edge_background } },
+            { Foreground = { Color = edge_foreground } },
+            { Text = SOLID_RIGHT_ARROW },
+            { Background = { Color = edge_background } },
+            { Foreground = { Color = edge_foreground } },
+            { Text = ' ' },
+        }
+    end
+)
 
 local ssh = require("ssh")
 
@@ -21,14 +90,9 @@ local config = {
     use_fancy_tab_bar = false,
     enable_tab_bar = true,
     show_tab_index_in_tab_bar = true,
-    hide_tab_bar_if_only_one_tab = true,
+    hide_tab_bar_if_only_one_tab = false,
     tab_max_width = 30,
     switch_to_last_active_tab_when_closing_tab = true,
-
-    inactive_pane_hsb = {
-        saturation = 0.8,
-        brightness = 0.75,
-    },
 
     colors = {
         tab_bar = {
@@ -245,10 +309,10 @@ local config = {
 }
 
 if wezterm.target_triple == "x86_64-pc-windows-msvc" then
-    config.default_prog = { "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" }
+    config.default_prog = { "ubuntu2404.exe" }
     --color, metadata = wezterm.color.load_scheme(".\\colors\\'Github Dark Dimmed.toml'")
     --config.color_scheme = color
-    config.font_size = 10
+    config.font_size = 9
     config.window_background_opacity = 1
     config.text_background_opacity = 1
     config.color_scheme_dirs = { "C:\\Users\\Rain\\.config\\wezterm\\color" }
@@ -290,4 +354,3 @@ for _, ssh_info in ipairs(ssh) do
 end
 
 return config
-
