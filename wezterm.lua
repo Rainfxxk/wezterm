@@ -327,7 +327,7 @@ if wezterm.target_triple == "x86_64-pc-windows-msvc" then
         args = { "ubuntu2404.exe" },
     })
 elseif wezterm.target_triple == "x86_64-unknown-linux-gnu" then
-    config.font_size = 11
+    config.font_size = 12
     config.color_scheme_dirs = { "/home/rain/.config/wezterm/color" }
     config.window_background_opacity = 1
     config.text_background_opacity = 1
