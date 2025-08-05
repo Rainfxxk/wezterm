@@ -1,27 +1,6 @@
 local wezterm = require("wezterm")
+local ssh = require("ssh")
 
--- The filled in variant of the < symbol
-local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
-
--- The filled in variant of the > symbol
-local SOLID_RIGHT_ARROW = wezterm.nerdfonts.ple_right_half_circle_thick
-
--- This function returns the suggested title for a tab.
--- It prefers the title that was set via `tab:set_title()`
--- or `wezterm cli set-tab-title`, but falls back to the
--- title of the active pane in that tab.
-function tab_title(tab_info)
-    local title = tab_info.tab_title
-    -- if the tab title is explicitly set, take that
-    if title and #title > 0 then
-        return title
-    end
-    -- Otherwise, use the title from the active pane
-    -- in that tab
-    return tab_info.active_pane.title
-end
-
-local wezterm = require 'wezterm'
 
 wezterm.on('update-right-status', function(window, pane)
     -- "Wed Mar 3 08:14"
@@ -32,19 +11,73 @@ wezterm.on('update-right-status', function(window, pane)
     })
 end)
 
+
+local act = wezterm.action
+
+local function creat_tab_bar_color(colors)
+    local background = colors.background
+    local foreground = colors.foreground
+    local tab_bar = {
+        background = background,
+        active_tab = {
+            -- The color of the background area for the tab
+            bg_color = colors.ansi[2],
+            -- The color of the text for the tab
+            fg_color = "#ffffff",
+            intensity = "Normal",
+            underline = "None",
+            italic = false,
+            strikethrough = false,
+        },
+        inactive_tab = {
+            bg_color = background,
+            fg_color = foreground,
+        },
+        inactive_tab_hover = {
+            bg_color = background,
+            fg_color = foreground,
+        },
+        new_tab = {
+            bg_color = background,
+            fg_color = foreground,
+        },
+        new_tab_hover = {
+            bg_color = background,
+            fg_color = foreground,
+        },
+    }
+
+    return tab_bar
+end
+
+local colors = wezterm.color.load_scheme(wezterm.config_dir .. "/color/rose-pine-dawn.toml")
+colors.tab_bar = creat_tab_bar_color(colors)
+
+local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
+local SOLID_RIGHT_ARROW = wezterm.nerdfonts.ple_right_half_circle_thick
+
+function tab_title(tab_info)
+    local title = tab_info.tab_title
+    if title and #title > 0 then
+        return title
+    end
+    return tab_info.active_pane.title
+end
+
 wezterm.on(
     'format-tab-title',
     function(tab, tabs, panes, config, hover, max_width)
-        local edge_background = '#22272e'
-        local background = '#22272e'
-        local foreground = '#adbac7'
+        local edge_background = config.colors.background
+        local background = config.colors.background
+        local foreground = config.colors.foreground
 
         if tab.is_active then
-            background = '#363d48'
-            foreground = '#adbac7'
+            -- local index = math.random(2, #config.colors.ansi)
+            background = config.colors.ansi[2]
+            foreground = "#ffffff"
         elseif hover then
-            background = '#22272e'
-            foreground = '#adbac7'
+            background = config.colors.background
+            foreground = config.colors.foreground
         end
 
         local edge_foreground = background
@@ -68,24 +101,18 @@ wezterm.on(
             { Background = { Color = edge_background } },
             { Foreground = { Color = edge_foreground } },
             { Text = SOLID_RIGHT_ARROW },
-            { Background = { Color = edge_background } },
-            { Foreground = { Color = edge_foreground } },
-            { Text = ' ' },
         }
     end
 )
 
-local ssh = require("ssh")
-
-local act = wezterm.action
-
-local launch_menu = {}
 
 local config = {
     font = wezterm.font("Hack Nerd Font Mono", { weight = "Regular" }),
-    font_size = 11,
+    font_size = 10,
 
-    color_scheme = "Github Dark Dimmed",
+    -- color_scheme = "Github Dark Dimmed",
+    color_scheme = "Github Light Default",
+    -- color_scheme = "rose-pine-dawn",
 
     use_fancy_tab_bar = false,
     enable_tab_bar = true,
@@ -94,77 +121,7 @@ local config = {
     tab_max_width = 30,
     switch_to_last_active_tab_when_closing_tab = true,
 
-    colors = {
-        tab_bar = {
-            -- The color of the strip that goes along the top of the window
-            -- (does not apply when fancy tab bar is in use)
-            background = "#22272e",
-
-            -- The active tab is the one that has focus in the window
-            active_tab = {
-                -- The color of the background area for the tab
-                bg_color = "#363d48",
-                -- The color of the text for the tab
-                fg_color = "#adbac7",
-
-                -- Specify whether you want "Half", "Normal" or "Bold" intensity for the
-                -- label shown for this tab.
-                -- The default is "Normal"
-                intensity = "Normal",
-
-                -- Specify whether you want "None", "Single" or "Double" underline for
-                -- label shown for this tab.
-                -- The default is "None"
-                underline = "None",
-
-                -- Specify whether you want the text to be italic (true) or not (false)
-                -- for this tab.  The default is false.
-                italic = false,
-
-                -- Specify whether you want the text to be rendered with strikethrough (true)
-                -- or not for this tab.  The default is false.
-                strikethrough = false,
-            },
-
-            -- Inactive tabs are the tabs that do not have focus
-            inactive_tab = {
-                bg_color = "#22272e",
-                fg_color = "#adbac7",
-
-                -- The same options that were listed under the `active_tab` section above
-                -- can also be used for `inactive_tab`.
-            },
-
-            -- You can configure some alternate styling when the mouse pointer
-            -- moves over inactive tabs
-            inactive_tab_hover = {
-                bg_color = "#22272e",
-                fg_color = "#adbac7",
-
-                -- The same options that were listed under the `active_tab` section above
-                -- can also be used for `inactive_tab_hover`.
-            },
-
-            -- The new tab button that let you create new tabs
-            new_tab = {
-                bg_color = "#22272e",
-                fg_color = "#adbac7",
-
-                -- The same options that were listed under the `active_tab` section above
-                -- can also be used for `new_tab`.
-            },
-
-            -- You can configure some alternate styling when the mouse pointer
-            -- moves over the new tab button
-            new_tab_hover = {
-                bg_color = "#22272e",
-                fg_color = "#adbac7",
-
-                -- The same options that were listed under the `active_tab` section above
-                -- can also be used for `new_tab_hover`.
-            },
-        },
-    },
+    colors = colors,
 
     window_decorations = "RESIZE",
     macos_window_background_blur = 30,
@@ -180,9 +137,45 @@ local config = {
     },
     initial_rows = 35,
     initial_cols = 125,
+    window_background_opacity = 1,
+    text_background_opacity = 1,
 
     leader = { key = "w", mods = "ALT", timeout_milliseconds = 1000 },
     keys = {
+        {
+            key = 'c',
+            mods = 'LEADER',
+            action = wezterm.action_callback(function(window, pane)
+                local choices = {}
+                for _, path in ipairs(wezterm.read_dir(wezterm.config_dir .. '/color')) do
+                    local colorscheme = string.match(path, "([%w%s-]+).toml")
+                    table.insert(choices, { label = colorscheme, id = path })
+                end
+
+                window:perform_action(
+                    act.InputSelector {
+                        action = wezterm.action_callback(function(window, pane, id, label)
+                            if not id and not label then
+                                wezterm.log_info 'cancelled'
+                            else
+                                wezterm.log_info('you selected ', id, label)
+                                -- Since we didn't set an id in this example, we're
+                                -- sending the label
+                                local colors, matadata = wezterm.color.load_scheme(id)
+                                colors.tab_bar = creat_tab_bar_color(colors)
+                                local overrides = window:get_config_overrides() or {}
+                                overrides.colors = colors
+                                window:set_config_overrides(overrides)
+                            end
+                        end),
+                        title = 'ColorScheme',
+                        choices = choices,
+                        description = 'choose a colorscheme or press / to search.',
+                    },
+                    pane
+                )
+            end),
+        },
         {
             key = "v",
             mods = "LEADER | SHIFT",
@@ -259,6 +252,21 @@ local config = {
             }),
         },
         {
+            key = "=",
+            mods = "LEADER",
+            action = act.IncreaseFontSize
+        },
+        {
+            key = "-",
+            mods = "LEADER",
+            action = act.DecreaseFontSize
+        },
+        {
+            key = "r",
+            mods = "LEADER",
+            action = act.ResetFontAndWindowSize
+        },
+        {
             key = "1",
             mods = "LEADER",
             action = act.ActivateTab(0),
@@ -305,32 +313,27 @@ local config = {
         },
     },
 
-    launch_menu = launch_menu,
+    launch_menu = {},
+    ssh_domains = {},
 }
+
+local colors, metadata
 
 if wezterm.target_triple == "x86_64-pc-windows-msvc" then
     config.default_prog = { "ubuntu2404.exe" }
-    --color, metadata = wezterm.color.load_scheme(".\\colors\\'Github Dark Dimmed.toml'")
-    --config.color_scheme = color
-    config.font_size = 9
-    config.window_background_opacity = 1
-    config.text_background_opacity = 1
-    config.color_scheme_dirs = { "C:\\Users\\Rain\\.config\\wezterm\\color" }
+    config.font_size = 10
 
-    table.insert(launch_menu, {
+    table.insert(config.launch_menu, {
         label = "Powershell",
         args = { "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" },
     })
 
-    table.insert(launch_menu, {
+    table.insert(config.launch_menu, {
         label = "WSL",
         args = { "ubuntu2404.exe" },
     })
 elseif wezterm.target_triple == "x86_64-unknown-linux-gnu" then
     config.font_size = 12
-    config.color_scheme_dirs = { "/home/rain/.config/wezterm/color" }
-    config.window_background_opacity = 1
-    config.text_background_opacity = 1
 end
 
 -- create ssh.lua, add content like this
@@ -342,8 +345,6 @@ end
 -- 	password = "123456",
 -- }
 -- }
-
-config.ssh_domains = {}
 
 for _, ssh_info in ipairs(ssh) do
     table.insert(config.ssh_domains, {
