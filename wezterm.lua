@@ -21,7 +21,7 @@ local function creat_tab_bar_color(colors)
         background = background,
         active_tab = {
             -- The color of the background area for the tab
-            bg_color = colors.ansi[2],
+            bg_color = colors.ansi[4],
             -- The color of the text for the tab
             fg_color = "#ffffff",
             intensity = "Normal",
@@ -50,7 +50,7 @@ local function creat_tab_bar_color(colors)
     return tab_bar
 end
 
-local colors = wezterm.color.load_scheme(wezterm.config_dir .. "/color/rose-pine-dawn.toml")
+local colors = wezterm.color.load_scheme(wezterm.config_dir .. "/color/Github Dark Dimmed.toml")
 colors.tab_bar = creat_tab_bar_color(colors)
 
 local SOLID_LEFT_ARROW = wezterm.nerdfonts.ple_left_half_circle_thick
@@ -73,7 +73,7 @@ wezterm.on(
 
         if tab.is_active then
             -- local index = math.random(2, #config.colors.ansi)
-            background = config.colors.ansi[2]
+            background = config.colors.ansi[5]
             foreground = "#ffffff"
         elseif hover then
             background = config.colors.background
@@ -86,7 +86,7 @@ wezterm.on(
 
         -- ensure that the titles fit in the available space,
         -- and that we have room for the edges.
-        title = wezterm.truncate_right(title, max_width - 4)
+        title = tab.tab_index + 1 .. " " .. wezterm.truncate_right(title, max_width - 3)
 
         return {
             { Background = { Color = edge_background } },
@@ -107,12 +107,13 @@ wezterm.on(
 
 
 local config = {
-    font = wezterm.font("Hack Nerd Font Mono", { weight = "Regular" }),
+    audible_bell = "Disabled",
+    -- window_decorations = "INTEGRATED_BUTTONS|RESIZE",
+    font = wezterm.font_with_fallback {
+        { family = "Hack Nerd Font Mono",  weight = "Regular" },
+        { family = "LXGW WenKai Mono",     weight = "Regular" },
+    },
     font_size = 10,
-
-    -- color_scheme = "Github Dark Dimmed",
-    color_scheme = "Github Light Default",
-    -- color_scheme = "rose-pine-dawn",
 
     use_fancy_tab_bar = false,
     enable_tab_bar = true,
@@ -123,10 +124,15 @@ local config = {
 
     colors = colors,
 
+    command_palette_bg_color = colors.foreground,
+    command_palette_fg_color = colors.background,
+    -- command_palette_font = wezterm.font "Hack Nerd Font Mono",
+    command_palette_font_size = 12.0,
+    command_palette_rows = 14,
+
     window_decorations = "RESIZE",
-    macos_window_background_blur = 30,
-    --win32_system_backdrop = "Acrylic",
-    --win32_arcylic_accent_color = COLOR,
+    -- win32_system_backdrop = "Acrylic",
+    -- win32_arcylic_accent_color = COLOR,
 
     adjust_window_size_when_changing_font_size = false,
     window_padding = {
@@ -317,20 +323,21 @@ local config = {
     ssh_domains = {},
 }
 
-local colors, metadata
-
 if wezterm.target_triple == "x86_64-pc-windows-msvc" then
-    config.default_prog = { "ubuntu2404.exe" }
+    config.default_prog = { "wsl.exe", "~" }
     config.font_size = 10
 
     table.insert(config.launch_menu, {
         label = "Powershell",
-        args = { "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" },
+        args = { "powershell.exe" },
     })
-
     table.insert(config.launch_menu, {
         label = "WSL",
-        args = { "ubuntu2404.exe" },
+        args = { "wsl.exe", "~"},
+    })
+    table.insert(config.launch_menu, {
+        label = "Msys2 Ucrt64",
+        args = { "D:\\bin\\msys64\\msys2_shell.cmd", "-defterm", "-no-start", "-ucrt64" },
     })
 elseif wezterm.target_triple == "x86_64-unknown-linux-gnu" then
     config.font_size = 12
@@ -338,12 +345,12 @@ end
 
 -- create ssh.lua, add content like this
 -- return {
--- {
--- 	name = "remote server",
--- 	host = "127.0.0.1",
--- 	username = "root",
--- 	password = "123456",
--- }
+--     {
+-- 	    name = "remote server",
+--         host = "127.0.0.1",
+--         username = "root",
+--         password = "123456",
+--     }
 -- }
 
 for _, ssh_info in ipairs(ssh) do
