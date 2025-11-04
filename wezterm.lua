@@ -86,7 +86,7 @@ wezterm.on(
 
         -- ensure that the titles fit in the available space,
         -- and that we have room for the edges.
-        title = tab.tab_index + 1 .. " " .. wezterm.truncate_right(title, max_width - 3)
+        title = tab.tab_index + 1 .. " " .. wezterm.truncate_right(title, max_width - 5)
 
         return {
             { Background = { Color = edge_background } },
